@@ -32,8 +32,6 @@
 |------------|------------|
 | ![Stats](assets/screenshot-stats.png) | ![ORFs](assets/screenshot-orfs.png) |
 
-> *Demo screenshots – ενημέρωσέ τα με τα πραγματικά σου screenshots.*
-
 ---
 
 ## ⚙️ Requirements
