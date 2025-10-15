@@ -1,0 +1,4 @@
+.root { font-size: 13px; }
+.tab-pane *.tab-header-area { background-color: #f6f7fb; }
+.list-view { -fx-background-insets: 0; }
+.text-area { -fx-control-inner-background: #fafafa; }

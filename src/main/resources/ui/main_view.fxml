@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.chart.*?>
+<?import java.lang.String?>
+
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.konsel.genelab.ui.MainView">
+
+  <top>
+    <MenuBar>
+      <menus>
+        <Menu text="File">
+          <items>
+            <MenuItem text="Open FASTA/FASTQ..." onAction="#onOpenFiles"/>
+          </items>
+        </Menu>
+      </menus>
+    </MenuBar>
+  </top>
+
+  <left>
+    <ListView fx:id="sequenceList" prefWidth="300"/>
+  </left>
+
+  <center>
+    <TabPane>
+      <tabs>
+
+        <!-- ========= Stats ========= -->
+        <Tab text="Stats" closable="false">
+          <content>
+            <GridPane hgap="12" vgap="8">
+              <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+
+              <columnConstraints>
+                <ColumnConstraints percentWidth="25"/>
+                <ColumnConstraints percentWidth="75"/>
+              </columnConstraints>
+
+              <rowConstraints>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+                <RowConstraints/>
+              </rowConstraints>
+
+              <children>
+                <Label text="ID:" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+                <Label fx:id="idLabel" text="—" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+                <Label text="Length:" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+                <Label fx:id="lenLabel" text="—" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+                <Label text="GC%:" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+                <Label fx:id="gcLabel" text="—" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+                <Label text="Top k-mers (k=3):" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+                <TextArea fx:id="kmerArea" editable="false" prefRowCount="12"
+                          GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+              </children>
+            </GridPane>
+          </content>
+        </Tab>
+
+        <!-- ========= ORFs ========= -->
+        <Tab text="ORFs" closable="false">
+          <content>
+            <VBox spacing="10">
+              <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+              <children>
+                <HBox spacing="10">
+                  <Label text="Sequence:"/>
+                  <Label fx:id="orfSeqLabel" text="—"/>
+                  <Label text="Min length (nt):"/>
+                  <TextField fx:id="minLenField" promptText="90" prefWidth="80"/>
+                  <Button text="Find ORFs" onAction="#onFindOrfs"/>
+                </HBox>
+
+                <TableView fx:id="orfTable" prefHeight="400">
+                <Button text="Export ORFs (CSV)" onAction="#onExportOrfs"/>
+                  <columns>
+                    <TableColumn fx:id="startCol" text="Start (0-based)" prefWidth="120"/>
+                    <TableColumn fx:id="endCol"   text="End"             prefWidth="80"/>
+                    <TableColumn fx:id="frameCol" text="Frame"           prefWidth="80"/>
+                    <TableColumn fx:id="lenCol"   text="Len (nt)"        prefWidth="100"/>
+                    <TableColumn fx:id="lenAaCol" text="Len (aa)"        prefWidth="100"/>
+                  </columns>
+                </TableView>
+              </children>
+            </VBox>
+          </content>
+        </Tab>
+
+        <Tab text="Viewer" closable="false">
+            <content>
+                <VBox spacing="10">
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                    <children>
+                        <Label text="Sequence viewer (selected ORF highlighted)"/>
+                        <ScrollPane fitToWidth="true" fitToHeight="true">
+                            <content>
+                                <TextFlow fx:id="seqViewer" prefWidth="900"/>
+                            </content>
+                        </ScrollPane>
+                    </children>
+                </VBox>
+            </content>
+        </Tab>
+
+        <Tab text="Search" closable="false">
+            <content>
+                <VBox spacing="10">
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                    <children>
+                        <HBox spacing="10">
+                            <Label text="Motif:"/>
+                            <TextField fx:id="motifField" promptText="e.g. ATG[ATGC]{3}TAA"/>
+                            <CheckBox fx:id="regexMode" text="Regex" selected="true"/>
+                            <Button text="Find" onAction="#onFindMotif"/>
+                        </HBox>
+                        <Label fx:id="motifSummary" text="—"/>
+                    </children>
+                </VBox>
+            </content>
+        </Tab>
+
+        <Tab text="Restriction Map" closable="false">
+            <content>
+                <VBox spacing="10">
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                    <children>
+                        <HBox spacing="10">
+                            <Label text="Sequence:"/>
+                            <Label fx:id="reSeqLabel" text="—"/>
+                            <Button text="Scan Sites" onAction="#onScanRestrictionSites"/>
+                            <Button text="Export CSV" onAction="#onExportRestrictionCsv"/>
+                            <CheckBox fx:id="reCircularCheck" text="Circular" />
+                        </HBox>
+                        <HBox spacing="10">
+                            <Label text="Digest (linear):"/>
+                            <Label text="Selected enzymes from table or all if none selected"/>
+                            <Button text="Run Digest" onAction="#onRunDigestLinear"/>
+                            <Button text="Export Fragments CSV" onAction="#onExportFragmentsCsv"/>
+                        </HBox>
+
+                        <TableView fx:id="fragTable" prefHeight="240">
+                            <columns>
+                                <TableColumn fx:id="fragStartCol" text="Start" prefWidth="100"/>
+                                <TableColumn fx:id="fragEndCol" text="End" prefWidth="100"/>
+                                <TableColumn fx:id="fragLenCol" text="Length" prefWidth="120"/>
+                            </columns>
+                        </TableView>
+
+                        <HBox spacing="10">
+                            <Label text="Add enzyme:"/>
+                            <TextField fx:id="reNameField" promptText="Name (e.g. BsmBI)" prefWidth="140"/>
+                            <TextField fx:id="reSiteField" promptText="Site (IUPAC, e.g. CGTCTC)" prefWidth="220"/>
+                            <TextField fx:id="reOffsetField" promptText="Cut offset (0-based)" prefWidth="140"/>
+                            <Button text="Add" onAction="#onAddCustomEnzyme"/>
+                            <Button text="Clear custom" onAction="#onClearCustomEnzymes"/>
+                        </HBox>
+                        <TableView fx:id="reTable" prefHeight="420">
+                            <columns>
+                                <TableColumn fx:id="reEnzCol" text="Enzyme" prefWidth="140"/>
+                                <TableColumn fx:id="reSiteCol" text="Site" prefWidth="120"/>
+                                <TableColumn fx:id="rePosCol" text="Position (0-based)" prefWidth="160"/>
+                                <TableColumn fx:id="reStrandCol" text="Strand" prefWidth="80"/>
+                            </columns>
+                        </TableView>
+                    </children>
+                </VBox>
+            </content>
+        </Tab>
+
+
+
+        <!-- ========= Alignment ========= -->
+        <Tab text="Alignment" closable="false">
+          <content>
+            <VBox spacing="10">
+              <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+              <children>
+
+                <HBox spacing="10">
+                  <Label text="Match"/>
+                  <TextField fx:id="matchField" promptText="1"  prefWidth="60"/>
+                  <Label text="Mismatch"/>
+                  <TextField fx:id="mismatchField" promptText="-1" prefWidth="60"/>
+                  <Label text="Gap"/>
+                  <TextField fx:id="gapField" promptText="-2" prefWidth="60"/>
+                  <CheckBox fx:id="localMode" text="Local (Smith–Waterman)"/>
+                  <Button text="Align (Selected vs Selected)" onAction="#onAlignSelected"/>
+                </HBox>
+
+                <HBox spacing="10">
+                  <VBox spacing="6">
+                    <Label text="Seq A (custom)"/>
+                    <TextArea fx:id="seqAText" prefRowCount="6" wrapText="true"/>
+                  </VBox>
+                  <VBox spacing="6">
+                    <Label text="Seq B (custom)"/>
+                    <TextArea fx:id="seqBText" prefRowCount="6" wrapText="true"/>
+                  </VBox>
+                  <VBox alignment="BOTTOM_LEFT">
+                    <Button text="Align (Custom)" onAction="#onAlignCustom"/>
+                  </VBox>
+                </HBox>
+
+                <TitledPane text="Result" expanded="true">
+                  <content>
+                    <TextArea fx:id="alignOut" editable="false" prefRowCount="10" wrapText="false"/>
+                  </content>
+                </TitledPane>
+
+              </children>
+            </VBox>
+          </content>
+        </Tab>
+
+        <!-- ========= Plots ========= -->
+        <Tab text="Plots" closable="false">
+            <content>
+                <VBox spacing="10">
+                    <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                    <children>
+
+                        <HBox spacing="10">
+                            <Label text="Metric:"/>
+                            <ChoiceBox fx:id="metricChoice">
+                                <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                        <String fx:value="GC skew"/>
+                                        <String fx:value="AT skew"/>
+                                    </FXCollections>
+                                </items>
+                            </ChoiceBox>
+                            <Label text="Window:"/>
+                            <Spinner fx:id="windowSpinner" prefWidth="100"/>
+                            <Button text="Plot" onAction="#onPlotSkew"/>
+                            <Button text="Export PNG" onAction="#onExportPlot"/>
+                        </HBox>
+
+                        <LineChart fx:id="skewChart" prefHeight="420">
+                            <xAxis><NumberAxis label="Position (nt)"/></xAxis>
+                            <yAxis><NumberAxis label="Skew"/></yAxis>
+                        </LineChart>
+                    </children>
+                </VBox>
+            </content>
+        </Tab>
+
+      </tabs>
+    </TabPane>
+  </center>
+
+</BorderPane>
